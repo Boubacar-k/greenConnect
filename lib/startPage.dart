@@ -31,7 +31,7 @@ class _StartState extends State<Start> {
               padding: EdgeInsets.only(left: 35,top: MediaQuery.of(context).size.height*0.3,right: 35),
               child:Column(
                 children: [
-                  SvgPicture.asset('assets/image/data.svg',height: 300,),
+                  SvgPicture.asset('assets/image/nature.svg',height: 300,),
 
                   SizedBox(
                     height: MediaQuery.of(context).size.height*0.18,

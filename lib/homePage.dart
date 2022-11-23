@@ -167,7 +167,7 @@ class _Home_pageState extends State<Home_page> {
                                 SizedBox(
                                   height: MediaQuery.of(context).size.height*0.02,
                                 ),
-                                if(imageFile!=null) Text("${results![0]["label"].toString()}",style: TextStyle(
+                                if(imageFile!=null) Text("soil status :${results![0]["label"].toString()}",style: TextStyle(
                                   fontSize: 14.0,
                                   color: Colors.black,
                                 ),)
@@ -227,8 +227,8 @@ class _Home_pageState extends State<Home_page> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Container(
-                                width: 180,
-                                height: 200,
+                                width: 160,
+                                height: 180,
                                 padding: EdgeInsets.only(left: 10,right: 10,top:50,bottom: 50 ),
                                 decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
@@ -247,8 +247,8 @@ class _Home_pageState extends State<Home_page> {
                                 )
                             ),
                             Container(
-                                width: 180,
-                                height: 200,
+                                width: 160,
+                                height: 180,
                                 padding: EdgeInsets.only(left: 10,right: 10,top:50,bottom: 50 ),
                                 decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
@@ -272,18 +272,29 @@ class _Home_pageState extends State<Home_page> {
                       ],
                     ));}
                 else if(snapshot.connectionState == ConnectionState.waiting){
+                  if (snapshot.connectionState ==null){
+                    return Center(
+                        child: Text(
+                          "Please check your connection",style: TextStyle(
+                            fontWeight: FontWeight.bold,fontSize: 18,
+                            color: Colors.black)));
+                  }
                   return Center(
                     child: CircularProgressIndicator(),
                   );
                 }
-              return Center(
-              child: Text(
-              "Please check your connection",style: TextStyle(
-              fontWeight: FontWeight.bold,fontSize: 18,
-              color: Colors.black
-              ),
-              ),
-              );
+                else if(snapshot.connectionState==null){
+                  return Center(
+                    child: Text(
+                      "Please check your connection",style: TextStyle(
+                        fontWeight: FontWeight.bold,fontSize: 18,
+                        color: Colors.black
+                    ),
+                    ),
+                  );
+                }
+                return Column();
+
               }),
               SizedBox(
                 height: MediaQuery.of(context).size.height*0.03,
