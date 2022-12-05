@@ -25,13 +25,13 @@ class _StartState extends State<Start> {
             ),
             Container(
               padding: EdgeInsets.only(left: 150,top: 130),
-              child: Text("Soil moisture\npredictor",style: TextStyle(color: Colors.black,fontSize: 30,fontWeight: FontWeight.bold,fontStyle: FontStyle.normal),),
+              child: Text("Green Connect",style: TextStyle(color: Colors.black,fontSize: 40,fontWeight: FontWeight.bold,fontStyle: FontStyle.normal),),
             ),
             Container(
               padding: EdgeInsets.only(left: 35,top: MediaQuery.of(context).size.height*0.3,right: 35),
               child:Column(
                 children: [
-                  SvgPicture.asset('assets/image/data.svg',height: 300,),
+                  SvgPicture.asset('assets/image/nature.svg',height: 300,),
 
                   SizedBox(
                     height: MediaQuery.of(context).size.height*0.18,

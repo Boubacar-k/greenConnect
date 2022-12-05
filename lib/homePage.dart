@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:smd/detailPage.dart';
 import 'package:smd/service/weather_api_client.dart';
 import 'package:smd/weath/weather_model.dart';
 import 'package:tflite/tflite.dart';
@@ -17,9 +18,18 @@ class Home_page extends StatefulWidget {
 class _Home_pageState extends State<Home_page> {
 
   File? imageFile;
-  String? result;
+  List? results;
 
   late Position _position;
+
+  void _sendDataToSecondScreen(BuildContext context) {
+    File? imageToSend = imageFile!;
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Detail_page(imageF: imageToSend,),
+        ));
+  }
 
   Future<Position> _determinePosition() async {
     LocationPermission permission;
@@ -77,6 +87,7 @@ class _Home_pageState extends State<Home_page> {
     imageClassification(imageFile!);
   }
 
+
   @override
   void initState(){
     super.initState();
@@ -85,18 +96,19 @@ class _Home_pageState extends State<Home_page> {
   Future loadModel() async {
     Tflite.close();
     String res;
-    //res = (await Tflite.loadModel(model: "assets/model.tflite",labels: "assets/labels.txt"))!;
-    print("Models loading status: res");
+    res = (await Tflite.loadModel(model: "assets/model.tflite",labels: "assets/labels.txt"))!;
+    print("Models loading status: $res");
   }
 
   Future imageClassification(File image) async{
     var recognitions = await Tflite.runModelOnImage(path: image.path,numResults: 1,
     threshold: 0.05,imageMean: 127.5,imageStd: 127.5);
     setState(() {
-      result = recognitions as String?;
+      results = recognitions;
       image = imageFile!;
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +133,7 @@ class _Home_pageState extends State<Home_page> {
         /*shape: ContinuousRectangleBorder(
             borderRadius: BorderRadius.vertical(
                 bottom: Radius.circular(100))),*/
-        expandedHeight: 500.0,
+        expandedHeight: 460.0,
         backgroundColor: Color(0xffAEE7AD),
         floating: false,
         pinned: true,
@@ -131,7 +143,7 @@ class _Home_pageState extends State<Home_page> {
             //title: Text('Home',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 18),),
             background: Stack(
               children: [
-                Column(
+                Positioned(child:  Column(
                   children: [
                     TitleSection(),
                     Container(
@@ -146,13 +158,55 @@ class _Home_pageState extends State<Home_page> {
                         fit: BoxFit.cover,):Icon(Icons.camera_alt_rounded,size: 200,),
                     )
                   ],
-                )
+                ),
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0),
+                Positioned(
+                  child: Container(
+                      child: (
+                          Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text('Prediction:',style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 17.0,
+                                  color: Colors.black,
+                                ),),
+                                if(imageFile!=null)FutureBuilder(
+                                    future: Future.delayed(Duration(seconds: 2)),
+                                    builder: (context,snapshot){
+                                      if(snapshot.connectionState == ConnectionState.done){
+                                        return Text("soil status :${results![0]["label"].toString()}",style: TextStyle(
+                                          fontSize: 14.0,
+                                          color: Colors.black,
+                                        ),);
+                                      }
+                                      return Container();
+                                    })
+
+                              ]
+                          )
+                      ),
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(50),
+                      ),
+                    ),
+                  ),
+                  bottom: -1,
+                  left: 0,
+                  right: 0,)
               ],
             ),
         ),
         ),
 
-      SliverToBoxAdapter(child: Container(
+      SliverToBoxAdapter(
+        child: Container(
             child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -176,31 +230,33 @@ class _Home_pageState extends State<Home_page> {
               SizedBox(
                 height: MediaQuery.of(context).size.height*0.05,
               ),
-              Container(
-                child: (
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text('Prediction:',style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 17.0,
-                          color: Colors.black,
-                        ),),
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height*0.02,
-                        ),
-                        if (imageFile!=null)Text("$result",style: TextStyle(
-                          fontSize: 14.0,
-                          color: Colors.black,
-                        ),)
-                      ],
-                    )
-                ),
-              ),
-              FutureBuilder(
+
+              if(imageFile!=null)FutureBuilder(
               future: getData(),
               builder: (context,snapshot){
-                if(snapshot.connectionState == ConnectionState.done)
+                if(snapshot.connectionState == ConnectionState.waiting){
+                  if (snapshot.hasError){
+                    return Center(
+                        child: Text(
+                          "Please check your connection",style: TextStyle(
+                            fontWeight: FontWeight.bold,fontSize: 18,
+                            color: Colors.black)));
+                  }
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                else if(snapshot.hasError){
+                  return Container(
+                    child: Text(
+                      "Please check your connection",style: TextStyle(
+                        fontWeight: FontWeight.bold,fontSize: 18,
+                        color: Colors.black
+                    ),
+                    ),
+                  );
+                }
+                else if(snapshot.connectionState == ConnectionState.done)
                 {return Padding(padding: EdgeInsets.only(top: 10),
                     child: Column(
                       children: [
@@ -208,8 +264,8 @@ class _Home_pageState extends State<Home_page> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Container(
-                                width: 180,
-                                height: 200,
+                                width: 160,
+                                height: 180,
                                 padding: EdgeInsets.only(left: 10,right: 10,top:50,bottom: 50 ),
                                 decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
@@ -228,8 +284,8 @@ class _Home_pageState extends State<Home_page> {
                                 )
                             ),
                             Container(
-                                width: 180,
-                                height: 200,
+                                width: 160,
+                                height: 180,
                                 padding: EdgeInsets.only(left: 10,right: 10,top:50,bottom: 50 ),
                                 decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
@@ -251,21 +307,9 @@ class _Home_pageState extends State<Home_page> {
                         ),
                         SizedBox(height: 10.0,),
                       ],
-                    ));}else if(snapshot.connectionState == ConnectionState.waiting){
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }else{
-                  return Container(
-                      child: Center(
-                      child: Text(
-                        "Please check your connection",style: TextStyle(
-                          fontWeight: FontWeight.bold,fontSize: 18,
-                          color: Colors.black
-                      ),
-                      ),
-                  ));
-                }
+                    ));}
+                return Container();
+
               }),
               SizedBox(
                 height: MediaQuery.of(context).size.height*0.03,
@@ -280,7 +324,7 @@ class _Home_pageState extends State<Home_page> {
                     child: IconButton(
                       color: Colors.black,
                       onPressed: (){
-                        Navigator.pushNamed(context, 'detailPage');
+                        _sendDataToSecondScreen(context);
                       },
                       icon: Icon(Icons.arrow_forward),
                     ),
@@ -324,13 +368,13 @@ class TitleSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding:  EdgeInsets.only(top: MediaQuery.of(context).size.height*0.15),
+      padding:  EdgeInsets.only(top: MediaQuery.of(context).size.height*0.11),
       width: double.infinity,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Picture',
+            'Soil Picture',
             style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 17.0,
