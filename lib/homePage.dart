@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:smd/detailPage.dart';
 import 'package:smd/service/weather_api_client.dart';
 import 'package:smd/weath/weather_model.dart';
 import 'package:tflite/tflite.dart';
@@ -20,6 +21,15 @@ class _Home_pageState extends State<Home_page> {
   List? results;
 
   late Position _position;
+
+  void _sendDataToSecondScreen(BuildContext context) {
+    File? imageToSend = imageFile!;
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Detail_page(imageF: imageToSend,),
+        ));
+  }
 
   Future<Position> _determinePosition() async {
     LocationPermission permission;
@@ -164,13 +174,18 @@ class _Home_pageState extends State<Home_page> {
                                   fontSize: 17.0,
                                   color: Colors.black,
                                 ),),
-                                SizedBox(
-                                  height: MediaQuery.of(context).size.height*0.02,
-                                ),
-                                if(imageFile!=null) Text("soil status :${results![0]["label"].toString()}",style: TextStyle(
-                                  fontSize: 14.0,
-                                  color: Colors.black,
-                                ),)
+                                if(imageFile!=null)FutureBuilder(
+                                    future: Future.delayed(Duration(seconds: 2)),
+                                    builder: (context,snapshot){
+                                      if(snapshot.connectionState == ConnectionState.done){
+                                        return Text("soil status :${results![0]["label"].toString()}",style: TextStyle(
+                                          fontSize: 14.0,
+                                          color: Colors.black,
+                                        ),);
+                                      }
+                                      return Container();
+                                    })
+
                               ]
                           )
                       ),
@@ -216,10 +231,32 @@ class _Home_pageState extends State<Home_page> {
                 height: MediaQuery.of(context).size.height*0.05,
               ),
 
-              FutureBuilder(
+              if(imageFile!=null)FutureBuilder(
               future: getData(),
               builder: (context,snapshot){
-                if(snapshot.connectionState == ConnectionState.done)
+                if(snapshot.connectionState == ConnectionState.waiting){
+                  if (snapshot.hasError){
+                    return Center(
+                        child: Text(
+                          "Please check your connection",style: TextStyle(
+                            fontWeight: FontWeight.bold,fontSize: 18,
+                            color: Colors.black)));
+                  }
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                else if(snapshot.hasError){
+                  return Container(
+                    child: Text(
+                      "Please check your connection",style: TextStyle(
+                        fontWeight: FontWeight.bold,fontSize: 18,
+                        color: Colors.black
+                    ),
+                    ),
+                  );
+                }
+                else if(snapshot.connectionState == ConnectionState.done)
                 {return Padding(padding: EdgeInsets.only(top: 10),
                     child: Column(
                       children: [
@@ -271,29 +308,7 @@ class _Home_pageState extends State<Home_page> {
                         SizedBox(height: 10.0,),
                       ],
                     ));}
-                else if(snapshot.connectionState == ConnectionState.waiting){
-                  if (snapshot.connectionState ==null){
-                    return Center(
-                        child: Text(
-                          "Please check your connection",style: TextStyle(
-                            fontWeight: FontWeight.bold,fontSize: 18,
-                            color: Colors.black)));
-                  }
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-                else if(snapshot.connectionState==null){
-                  return Center(
-                    child: Text(
-                      "Please check your connection",style: TextStyle(
-                        fontWeight: FontWeight.bold,fontSize: 18,
-                        color: Colors.black
-                    ),
-                    ),
-                  );
-                }
-                return Column();
+                return Container();
 
               }),
               SizedBox(
@@ -309,7 +324,7 @@ class _Home_pageState extends State<Home_page> {
                     child: IconButton(
                       color: Colors.black,
                       onPressed: (){
-                        Navigator.pushNamed(context, 'detailPage');
+                        _sendDataToSecondScreen(context);
                       },
                       icon: Icon(Icons.arrow_forward),
                     ),
@@ -359,7 +374,7 @@ class TitleSection extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Picture',
+            'Soil Picture',
             style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 17.0,
